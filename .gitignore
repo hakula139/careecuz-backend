@@ -1,0 +1,12 @@
+## Customized
+
+.DS_Store
+*.log
+.eslintcache
+
+
+## Node.js
+
+node_modules
+dist
+*.local
