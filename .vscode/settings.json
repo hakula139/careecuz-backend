@@ -1,0 +1,19 @@
+{
+  "[javascript]": {
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.formatOnSave": false,
+  "eslint.format.enable": true,
+  "eslint.packageManager": "yarn",
+  "eslint.validate": [
+    "typescript", //
+    "javascript"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
