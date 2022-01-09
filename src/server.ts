@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 
 import { LISTEN_PORT } from '@/configs';
+import { userHandlers } from '@/handlers';
 
 const io = new Server(LISTEN_PORT, {
   cors: {
@@ -11,3 +12,7 @@ const io = new Server(LISTEN_PORT, {
 
 console.log('Server started, press CTRL+C to exit.');
 console.log('Listening on port', LISTEN_PORT);
+
+io.on('connection', (socket: Socket) => {
+  userHandlers(io, socket);
+});
