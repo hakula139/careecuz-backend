@@ -21,13 +21,15 @@
       ]
     },
     "lib": [
-      "esnext", //
+      "esnext" //
+    ],
+    "plugins": [
+      { "transform": "typescript-transform-paths" } //
     ]
   },
   "include": [
     "src/**/*.ts", //
-    "src/**/*.tsx",
-    "server.ts",
+    "src/**/*.tsx"
   ],
   "exclude": [
     "node_modules", //
