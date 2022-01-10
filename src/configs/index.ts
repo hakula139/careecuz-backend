@@ -1,1 +1,1 @@
-export const LISTEN_PORT = 5050;
+export const { DB_CONN_STRING, DB_NAME, LISTEN_PORT } = process.env;

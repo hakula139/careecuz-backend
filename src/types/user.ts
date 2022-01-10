@@ -8,3 +8,5 @@ export interface User {
   userId: string;
   isBlocked: boolean;
 }
+
+export interface UserEntry extends User, Omit<UserForm, 'verifyCode'> {}
