@@ -1,6 +1,6 @@
 # CareeCuz Backend
 
-一个匿名的校招求职交流平台。后端基于 Express (Node.js)，使用 TypeScript 编写。
+一个匿名的校招求职交流平台。后端基于 Node.js，使用 TypeScript 编写。
 
 ## 目录
 
