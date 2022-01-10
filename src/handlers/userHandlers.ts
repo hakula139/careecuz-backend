@@ -20,6 +20,11 @@ const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) =>
           userId: user.userId,
           token: 'token', // TODO: create a session with redis
         });
+      } else {
+        callback({
+          code: 403,
+          message: '密码错误',
+        });
       }
     })
     .catch((error) => {
@@ -44,6 +49,7 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
         });
       } else {
         addUser(data).then(({ userId }) => {
+          console.log('[INFO ]', '(user:register)', `${email}: registered`);
           callback({
             code: 200,
             userId,
