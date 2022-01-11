@@ -6,10 +6,10 @@ import { UserModel } from '@/models';
 import { UserEntry, UserForm } from '@/types';
 
 export const getUser = async (userId: string): Promise<HydratedDocument<UserEntry> | null> =>
-  UserModel.findOne({ userId });
+  UserModel.findOne({ userId }).exec();
 
 export const getUserByEmail = async (email: string): Promise<HydratedDocument<UserEntry> | null> =>
-  UserModel.findOne({ email });
+  UserModel.findOne({ email }).exec();
 
 export const addUser = async ({ email, password }: UserForm): Promise<HydratedDocument<UserEntry>> => {
   const user = new UserModel({

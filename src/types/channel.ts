@@ -15,4 +15,5 @@ export interface ChannelEntry {
   name: string;
   isTop: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }

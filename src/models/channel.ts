@@ -17,6 +17,7 @@ const channelSchema = new Schema<ChannelEntry>(
     },
   },
   {
+    strictQuery: 'throw',
     timestamps: true,
   },
 );

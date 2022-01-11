@@ -27,9 +27,8 @@ const userSchema = new Schema<UserEntry>(
     },
   },
   {
-    timestamps: {
-      createdAt: 'created_at',
-    },
+    strictQuery: 'throw',
+    timestamps: true,
   },
 );
 
