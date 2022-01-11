@@ -17,9 +17,7 @@ const channelSchema = new Schema<ChannelEntry>(
     },
   },
   {
-    timestamps: {
-      createdAt: 'created_at',
-    },
+    timestamps: true,
   },
 );
 

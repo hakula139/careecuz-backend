@@ -4,15 +4,14 @@ import {
   AddChannelReq, AddChannelResp, GetChannelReq, GetChannelResp, GetChannelsResp,
 } from '@/types';
 import { addChannel, getChannel, getChannels } from '@/services/channelCollection.service';
-import { objectIdToInt } from '@/utils';
 
 const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
   getChannels()
     .then((channels) => {
       const parsedChannels = channels.map(({
-        _id, name, isTop, createdAt,
+        id, name, isTop, createdAt,
       }) => ({
-        id: objectIdToInt(_id),
+        id: parseInt(id, 16),
         name,
         replyCount: 0, // TODO: get reply count from thread collections
         lastReplyTime: createdAt.toISOString(), // TODO: get last reply time from thread collections
@@ -65,7 +64,7 @@ const onAddChannelReq = ({ data }: AddChannelReq, callback: (resp: AddChannelRes
       console.log('[INFO ]', '(channel:add)', `${id} (${data.name}): added`);
       callback({
         code: 200,
-        id,
+        id: parseInt(id, 16),
       });
     })
     .catch((error) => {

@@ -14,7 +14,7 @@ export default class DatabaseManager {
           this.db = mongoose.connection;
           console.log('[INFO ]', '(database)', `connected to database: ${this.db.name}`);
         } catch (error) {
-          console.log('[FATAL]', '(database)', `failed to connect to database: ${DB_NAME}, retrying...`);
+          console.log('[WARN ]', '(database)', `failed to connect to database: ${DB_NAME}, retrying...`);
         }
       }
     };
@@ -22,12 +22,12 @@ export default class DatabaseManager {
     await tryConnect();
     if (this.db) {
       this.db.on('connect', () => console.log('[INFO ]', '(database)', `connected to database: ${this.db!.name}`));
-      this.db.on('open', () => console.log('[INFO ]', '(database)', 'connection open'));
+      this.db.on('open', () => console.log('[DEBUG]', '(database)', 'connection open'));
       this.db.on('disconnect', async () => {
         console.log('[INFO ]', '(database)', `disconnected from database: ${this.db!.name}`);
         await tryConnect();
       });
-      this.db.on('close', () => console.log('[INFO ]', '(database)', 'connection closed'));
+      this.db.on('close', () => console.log('[DEBUG]', '(database)', 'connection closed'));
       this.db.on('error', (error) => console.log('[WARN ]', '(database)', error));
     }
   }
