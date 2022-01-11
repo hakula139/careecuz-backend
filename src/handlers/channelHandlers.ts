@@ -11,7 +11,7 @@ const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
       const parsedChannels = channels.map(({
         id, name, isTop, createdAt,
       }) => ({
-        id: parseInt(id, 16),
+        id,
         name,
         replyCount: 0, // TODO: get reply count from thread collections
         lastReplyTime: createdAt.toISOString(), // TODO: get last reply time from thread collections
@@ -64,7 +64,7 @@ const onAddChannelReq = ({ data }: AddChannelReq, callback: (resp: AddChannelRes
       console.log('[INFO ]', '(channel:add)', `${id} (${data.name}): added`);
       callback({
         code: 200,
-        id: parseInt(id, 16),
+        id,
       });
     })
     .catch((error) => {
