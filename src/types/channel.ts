@@ -10,3 +10,9 @@ export interface ChannelSummary extends ChannelInfo {
   lastReplyTime: string;
   isTop: boolean;
 }
+
+export interface ChannelEntry {
+  name: string;
+  isTop: boolean;
+  createdAt: Date;
+}

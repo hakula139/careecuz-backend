@@ -14,4 +14,5 @@ export interface UserEntry {
   email: string;
   password: string;
   isBlocked: boolean;
+  createdAt: Date;
 }

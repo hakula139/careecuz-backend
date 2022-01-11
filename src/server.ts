@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 
 import { LISTEN_PORT } from './configs';
-import { userHandlers } from './handlers';
+import { channelHandlers, userHandlers } from './handlers';
 import DatabaseManager from './services/database.service';
 
 const io = new Server(LISTEN_PORT, {
@@ -18,5 +18,6 @@ const dbManager = new DatabaseManager();
 await dbManager.connect();
 
 io.on('connection', (socket: Socket) => {
+  channelHandlers(io, socket);
   userHandlers(io, socket);
 });
