@@ -11,8 +11,7 @@ const io = new Server(LISTEN_PORT, {
   },
 });
 
-console.log('Server started, press CTRL+C to exit.');
-console.log('Listening on port', LISTEN_PORT);
+console.log('[INFO ]', '(server)', 'server started, listening on port', LISTEN_PORT);
 
 const dbManager = new DatabaseManager();
 await dbManager.connect();
