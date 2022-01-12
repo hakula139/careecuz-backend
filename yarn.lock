@@ -312,6 +312,28 @@
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
 
+"@types/mongodb@*":
+  version "4.0.7"
+  resolved "https://registry.yarnpkg.com/@types/mongodb/-/mongodb-4.0.7.tgz#ebaa80c53b684ea52ccfe7721c0f5c9ef7b4f511"
+  integrity sha512-lPUYPpzA43baXqnd36cZ9xxorprybxXDzteVKCPAdp14ppHtFJHnXYvNpmBvtMUTb5fKXVv6sVbzo1LHkWhJlw==
+  dependencies:
+    mongodb "*"
+
+"@types/mongoose-unique-validator@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@types/mongoose-unique-validator/-/mongoose-unique-validator-1.0.5.tgz#2896dfb85d72b06fccde5cec3fd920b4b9dc1bbe"
+  integrity sha512-i7U0L+xrTSwaDfi18cEpC1N549yZVKTKQMzBRJpXvdPMR0BgDO6sjZ/nOoOa3ekhJTNo37DSzrPCbHeY+pd7ng==
+  dependencies:
+    "@types/mongoose" "5.10.5"
+
+"@types/mongoose@5.10.5":
+  version "5.10.5"
+  resolved "https://registry.yarnpkg.com/@types/mongoose/-/mongoose-5.10.5.tgz#0f4fb0440e8cf0213caec1e5c7b163dbd9847c56"
+  integrity sha512-37QMIA954T3n+HSksSNLlxZsqF8fMJu5S4dyPBod6gRxGtsXlQ9jUtL8BE8Seimv99u79eLXI3bggoCnSQ/fxQ==
+  dependencies:
+    "@types/mongodb" "*"
+    "@types/node" "*"
+
 "@types/node@*", "@types/node@>=10.0.0", "@types/node@^17.0.8":
   version "17.0.8"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.8.tgz#50d680c8a8a78fe30abe6906453b21ad8ab0ad7b"
@@ -782,7 +804,7 @@ braces@^3.0.1:
   dependencies:
     fill-range "^7.0.1"
 
-bson@^4.2.2, bson@^4.6.0:
+bson@^4.2.2, bson@^4.6.0, bson@^4.6.1:
   version "4.6.1"
   resolved "https://registry.yarnpkg.com/bson/-/bson-4.6.1.tgz#2b5da517539bb0f7f3ffb54ac70a384ca899641c"
   integrity sha512-I1LQ7Hz5zgwR4QquilLNZwbhPw0Apx7i7X9kGMBTsqPdml/03Q9NBtD9nt/19ahjlphktQImrnderxqpzeVDjw==
@@ -2047,6 +2069,11 @@ interpret@^1.0.0:
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.4.0.tgz#665ab8bc4da27a774a40584e812e3e0fa45b1a1e"
   integrity sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==
 
+ip@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.5.tgz#bdded70114290828c0a039e72ef25f5aaec4354a"
+  integrity sha1-vd7XARQpCCjAoDnnLvJfWq7ENUo=
+
 is-arrayish@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.2.1.tgz#77c99840527aa8ecb1a8ba697b80645a7a926a9d"
@@ -2344,7 +2371,12 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
-lodash.get@^4:
+lodash.foreach@^4.1.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.foreach/-/lodash.foreach-4.5.0.tgz#1a6a35eace401280c7f06dddec35165ab27e3e53"
+  integrity sha1-Gmo16s5AEoDH8G3d7DUWWrJ+PlM=
+
+lodash.get@^4, lodash.get@^4.0.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
   integrity sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk=
@@ -2575,6 +2607,18 @@ mongodb-connection-string-url@^2.3.2:
     "@types/whatwg-url" "^8.2.1"
     whatwg-url "^11.0.0"
 
+mongodb@*:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-4.3.0.tgz#beac457cf57ea1b5c76ec67b8bbd6a63254bbc7c"
+  integrity sha512-ovq9ZD9wEvab+LsaQOiwtne1Sy2egaHW8K/H5M18Tv+V5PgTRi+qdmxDGlbm94TSL3h56m6amstptu115Nzgow==
+  dependencies:
+    bson "^4.6.1"
+    denque "^2.0.1"
+    mongodb-connection-string-url "^2.3.2"
+    socks "^2.6.1"
+  optionalDependencies:
+    saslprep "^1.0.3"
+
 mongodb@4.2.2:
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-4.2.2.tgz#cd70568bd96003877e35358ad17a0c5de35c6dfd"
@@ -2585,6 +2629,15 @@ mongodb@4.2.2:
     mongodb-connection-string-url "^2.3.2"
   optionalDependencies:
     saslprep "^1.0.3"
+
+mongoose-unique-validator@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/mongoose-unique-validator/-/mongoose-unique-validator-3.0.0.tgz#cc65a7237573cfc82d848f2fb9fade8627575760"
+  integrity sha512-WwC09CN2OQ39ONCEN2quR2L5CLHau3p2VYegRMitoVwdKA738uuJRlrTHXt5J6WyJBSloCILxwDZ5qbu4yEXcA==
+  dependencies:
+    lodash.foreach "^4.1.0"
+    lodash.get "^4.0.2"
+    lodash.merge "^4.6.2"
 
 mongoose@^6.1.5:
   version "6.1.5"
@@ -3379,6 +3432,11 @@ sliced@1.0.1:
   resolved "https://registry.yarnpkg.com/sliced/-/sliced-1.0.1.tgz#0b3a662b5d04c3177b1926bea82b03f837a2ef41"
   integrity sha1-CzpmK10Ewxd7GSa+qCsD+Dei70E=
 
+smart-buffer@^4.1.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-4.2.0.tgz#6e1d71fa4f18c05f7d0ff216dd16a481d0e8d9ae"
+  integrity sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==
+
 socket.io-adapter@~2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/socket.io-adapter/-/socket.io-adapter-2.3.3.tgz#4d6111e4d42e9f7646e365b4f578269821f13486"
@@ -3404,6 +3462,14 @@ socket.io@^4.4.1:
     engine.io "~6.1.0"
     socket.io-adapter "~2.3.3"
     socket.io-parser "~4.0.4"
+
+socks@^2.6.1:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/socks/-/socks-2.6.1.tgz#989e6534a07cf337deb1b1c94aaa44296520d30e"
+  integrity sha512-kLQ9N5ucj8uIcxrDwjm0Jsqk06xdpBjGNQtpXy4Q8/QY2k+fY7nZH8CARy+hkbG+SGAovmzzuauCpBlb8FrnBA==
+  dependencies:
+    ip "^1.1.5"
+    smart-buffer "^4.1.0"
 
 source-map-support@^0.5.17:
   version "0.5.21"
