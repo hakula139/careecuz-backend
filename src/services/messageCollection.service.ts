@@ -47,7 +47,7 @@ export const addMessage = (
     channelId,
     user: userId,
     content,
-    replyTo: new mongoose.Types.ObjectId(replyTo),
+    replyTo,
   });
   return message.save();
 };
