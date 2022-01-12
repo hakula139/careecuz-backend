@@ -9,7 +9,7 @@ export const getMessages = (
 ): Promise<HydratedDocument<MessageEntry>[]> => {
   let query = MessageModel.find().where('replyTo').exists(false);
   if (lastMessageId) query = query.where('_id').lt(parseInt(lastMessageId, 16));
-  if (maxMessageCount) query = query.sort(-1).limit(maxMessageCount).sort(1);
+  if (maxMessageCount) query = query.sort({ _id: -1 }).limit(maxMessageCount).sort({ _id: 1 });
   return query.populate('user').exec();
 };
 
@@ -17,7 +17,7 @@ export const getChannelReplyCount = (channelId: string): Promise<number> => Mess
 
 export const getChannelLastReplyTime = (channelId: string): Promise<Date | null> =>
   new Promise((resolve) => {
-    MessageModel.findOne({ channelId }, 'createdAt', { sort: -1 })
+    MessageModel.findOne({ channelId }, 'createdAt', { sort: { _id: -1 } })
       .exec()
       .then((message) => resolve(message?.createdAt || null));
   });
@@ -30,7 +30,7 @@ export const getMessageReplyCount = (messageId: string): Promise<number> =>
 
 export const getMessageLastReplyTime = (messageId: string): Promise<Date | null> =>
   new Promise((resolve) => {
-    MessageModel.findOne({ replyTo: messageId }, 'createdAt', { sort: -1 })
+    MessageModel.findOne({ replyTo: messageId }, 'createdAt', { sort: { _id: -1 } })
       .exec()
       .then((message) => resolve(message?.createdAt || null));
   });

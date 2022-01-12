@@ -10,8 +10,8 @@ import { getUserToken, setUserId, setUserToken } from '@/services/userRedis.serv
 
 const createSession = (userId: string, callback: (resp: UserAuthResp) => void): void => {
   const token = randomBytes(64).toString('hex');
-  console.log('[DEBUG]', '(user:login)', `token saved: (${userId}, ${token})`);
   setUserToken(userId, token).then(() => {
+    console.log('[DEBUG]', '(user:login)', `token saved: (${userId}, ${token})`);
     callback({
       code: 200,
       userId,
@@ -78,6 +78,7 @@ const onPushUserInfo = (socket: Socket, { userId, token }: PushUserInfo, callbac
     .then((savedToken) => {
       if (token === savedToken) {
         setUserId(socket.id, userId).then(() => {
+          console.log('[DEBUG]', '(user:info)', `user id saved: (${socket.id}, ${userId})`);
           callback({ code: 200 });
         });
       } else {
