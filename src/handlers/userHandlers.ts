@@ -6,7 +6,7 @@ import {
   PushUserInfo, Resp, UserAuthReq, UserAuthResp,
 } from '@/types';
 import { addUser, getUserByEmail } from '@/services/userCollection.service';
-import { getUserToken, setUserToken } from '@/services/userRedis.service';
+import { getUserToken, setUserId, setUserToken } from '@/services/userRedis.service';
 
 const createSession = (userId: string, callback: (resp: UserAuthResp) => void): void => {
   const token = randomBytes(64).toString('hex');
@@ -73,12 +73,12 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
     });
 };
 
-const onPushUserInfo = ({ userId, token }: PushUserInfo, callback: (resp: Resp) => void): void => {
+const onPushUserInfo = (socket: Socket, { userId, token }: PushUserInfo, callback: (resp: Resp) => void): void => {
   getUserToken(userId)
     .then((savedToken) => {
       if (token === savedToken) {
-        callback({
-          code: 200,
+        setUserId(socket.id, userId).then(() => {
+          callback({ code: 200 });
         });
       } else {
         callback({
@@ -99,7 +99,9 @@ const onPushUserInfo = ({ userId, token }: PushUserInfo, callback: (resp: Resp) 
 const userHandlers = (_io: Server, socket: Socket) => {
   socket.on('user:login', onUserLoginReq);
   socket.on('user:register', onUserRegisterReq);
-  socket.on('user:info', onPushUserInfo);
+  socket.on('user:info', (req: PushUserInfo, callback: (resp: Resp) => void): void => {
+    onPushUserInfo(socket, req, callback);
+  });
 };
 
 export default userHandlers;

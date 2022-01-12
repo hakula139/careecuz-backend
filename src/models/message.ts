@@ -7,11 +7,10 @@ const { model, Schema } = mongoose;
 const messageSchema = new Schema<MessageEntry>(
   {
     channelId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'Channel',
     },
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User',
@@ -21,8 +20,7 @@ const messageSchema = new Schema<MessageEntry>(
       required: true,
     },
     replyTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Message',
+      type: String,
     },
   },
   {

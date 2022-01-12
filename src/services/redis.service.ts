@@ -13,3 +13,5 @@ export default class RedisManager {
     this.db.on('error', (error) => console.log('[ERROR]', '(redis)', error));
   }
 }
+
+export const redisManager = new RedisManager();
