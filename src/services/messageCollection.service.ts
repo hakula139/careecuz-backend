@@ -45,7 +45,7 @@ export const addMessage = (
 ): Promise<HydratedDocument<MessageEntry>> => {
   const message = new MessageModel({
     channelId,
-    userId,
+    user: userId,
     content,
     replyTo: new mongoose.Types.ObjectId(replyTo),
   });

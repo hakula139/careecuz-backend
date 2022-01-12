@@ -14,5 +14,8 @@ export const setUserToken = (
 
 export const getUserId = (socketId: string): Promise<string | null> => db.get(`${REDIS_KEY_PREFIX}socket:${socketId}`);
 
-export const setUserId = (socketId: string, userId: string): Promise<string | null> =>
-  db.set(`${REDIS_KEY_PREFIX}socket:${socketId}`, userId);
+export const setUserId = (
+  socketId: string,
+  userId: string,
+  expire: number = 60 * 60, // will expire in an hour by default
+): Promise<string | null> => db.set(`${REDIS_KEY_PREFIX}socket:${socketId}`, userId, { EX: expire });
