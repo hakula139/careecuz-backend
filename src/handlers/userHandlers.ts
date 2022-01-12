@@ -1,7 +1,9 @@
 import { compareSync } from 'bcrypt';
 import { Server, Socket } from 'socket.io';
 
-import { UserAuthReq, UserAuthResp } from '@/types';
+import {
+  PushUserInfo, Resp, UserAuthReq, UserAuthResp,
+} from '@/types';
 import { addUser, getUserByEmail } from '@/services/userCollection.service';
 
 const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
@@ -68,8 +70,14 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
 };
 
 const userHandlers = (_io: Server, socket: Socket) => {
+  const onPushUserInfo = ({ userId, userToken }: PushUserInfo, callback: (resp: Resp) => void): void => {
+    // Store userId, userToken to redis.
+    callback({ code: 200 });
+  };
+
   socket.on('user:login', onUserLoginReq);
   socket.on('user:register', onUserRegisterReq);
+  socket.on('user:info', onPushUserInfo);
 };
 
 export default userHandlers;
