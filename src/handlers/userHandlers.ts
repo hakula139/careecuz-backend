@@ -22,7 +22,6 @@ const createSession = (userId: string, callback: (resp: UserAuthResp) => void): 
 
 const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
   const { email, password } = data;
-
   getUserByEmail(email)
     .then((user) => {
       if (!user) {
@@ -31,7 +30,7 @@ const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) =>
           message: '用户未注册',
         });
       } else if (compareSync(password, user.password)) {
-        createSession(user.userId, callback);
+        createSession(user.id, callback);
       } else {
         callback({
           code: 403,
@@ -50,7 +49,6 @@ const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) =>
 
 const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
   const { email } = data;
-
   getUserByEmail(email)
     .then((user) => {
       if (user) {
@@ -60,9 +58,9 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
           message: '用户已注册',
         });
       } else {
-        addUser(data).then(({ userId }) => {
+        addUser(data).then(({ id }) => {
           console.log('[INFO ]', '(user:register)', `${email}: registered`);
-          createSession(userId, callback);
+          createSession(id, callback);
         });
       }
     })
@@ -75,30 +73,30 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
     });
 };
 
-const userHandlers = (_io: Server, socket: Socket) => {
-  const onPushUserInfo = ({ userId, token }: PushUserInfo, callback: (resp: Resp) => void): void => {
-    getUserToken(userId)
-      .then((savedToken) => {
-        if (token === savedToken) {
-          callback({
-            code: 200,
-          });
-        } else {
-          callback({
-            code: 403,
-            message: '会话已过期',
-          });
-        }
-      })
-      .catch((error) => {
-        console.log('[ERROR]', '(user:info)', `${userId}: ${error}`);
+const onPushUserInfo = ({ userId, token }: PushUserInfo, callback: (resp: Resp) => void): void => {
+  getUserToken(userId)
+    .then((savedToken) => {
+      if (token === savedToken) {
         callback({
-          code: 500,
-          message: '服务器内部错误',
+          code: 200,
         });
+      } else {
+        callback({
+          code: 403,
+          message: '会话已过期',
+        });
+      }
+    })
+    .catch((error) => {
+      console.log('[ERROR]', '(user:info)', `${userId}: ${error}`);
+      callback({
+        code: 500,
+        message: '服务器内部错误',
       });
-  };
+    });
+};
 
+const userHandlers = (_io: Server, socket: Socket) => {
   socket.on('user:login', onUserLoginReq);
   socket.on('user:register', onUserRegisterReq);
   socket.on('user:info', onPushUserInfo);

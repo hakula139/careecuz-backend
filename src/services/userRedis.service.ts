@@ -3,10 +3,10 @@ import { redisManager } from '@/server';
 
 const { db } = redisManager;
 
-export const getUserToken = async (userId: string): Promise<string | null> =>
+export const getUserToken = (userId: string): Promise<string | null> =>
   db.get(`${REDIS_KEY_PREFIX}user:token:${userId}`);
 
-export const setUserToken = async (
+export const setUserToken = (
   userId: string,
   token: string,
   expire: number = 7 * 24 * 60 * 60, // will expire in a week by default

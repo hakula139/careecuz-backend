@@ -5,14 +5,15 @@ export interface UserForm {
 }
 
 export interface User {
-  userId: string;
+  id: string;
   isBlocked: boolean;
+  isRemoved: boolean;
 }
 
 export interface UserEntry {
-  userId: string;
   email: string;
   password: string;
   isBlocked: boolean;
+  isRemoved: boolean;
   createdAt: Date;
 }
