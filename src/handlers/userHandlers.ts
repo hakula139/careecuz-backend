@@ -1,10 +1,24 @@
 import { compareSync } from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { Server, Socket } from 'socket.io';
 
 import {
   PushUserInfo, Resp, UserAuthReq, UserAuthResp,
 } from '@/types';
 import { addUser, getUserByEmail } from '@/services/userCollection.service';
+import { getUserToken, setUserToken } from '@/services/userRedis.service';
+
+const createSession = (userId: string, callback: (resp: UserAuthResp) => void): void => {
+  const token = randomBytes(64).toString('hex');
+  console.log('[DEBUG]', '(user:login)', `token saved: (${userId}, ${token})`);
+  setUserToken(userId, token).then(() => {
+    callback({
+      code: 200,
+      userId,
+      token,
+    });
+  });
+};
 
 const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
   const { email, password } = data;
@@ -17,11 +31,7 @@ const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) =>
           message: '用户未注册',
         });
       } else if (compareSync(password, user.password)) {
-        callback({
-          code: 200,
-          userId: user.userId,
-          token: 'token', // TODO: create a session with redis
-        });
+        createSession(user.userId, callback);
       } else {
         callback({
           code: 403,
@@ -52,11 +62,7 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
       } else {
         addUser(data).then(({ userId }) => {
           console.log('[INFO ]', '(user:register)', `${email}: registered`);
-          callback({
-            code: 200,
-            userId,
-            token: 'token', // TODO: create a session with redis
-          });
+          createSession(userId, callback);
         });
       }
     })
@@ -70,9 +76,27 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
 };
 
 const userHandlers = (_io: Server, socket: Socket) => {
-  const onPushUserInfo = ({ userId, userToken }: PushUserInfo, callback: (resp: Resp) => void): void => {
-    // Store userId, userToken to redis.
-    callback({ code: 200 });
+  const onPushUserInfo = ({ userId, token }: PushUserInfo, callback: (resp: Resp) => void): void => {
+    getUserToken(userId)
+      .then((savedToken) => {
+        if (token === savedToken) {
+          callback({
+            code: 200,
+          });
+        } else {
+          callback({
+            code: 403,
+            message: '会话已过期',
+          });
+        }
+      })
+      .catch((error) => {
+        console.log('[ERROR]', '(user:info)', `${userId}: ${error}`);
+        callback({
+          code: 500,
+          message: '服务器内部错误',
+        });
+      });
   };
 
   socket.on('user:login', onUserLoginReq);

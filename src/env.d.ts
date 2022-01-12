@@ -5,6 +5,7 @@ declare global {
       LISTEN_PORT: number;
       DB_CONN_STRING: string;
       DB_NAME: string;
+      REDIS_CONN_STRING: string;
     }
   }
 }

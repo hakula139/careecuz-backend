@@ -4,6 +4,8 @@
 *.log
 .eslintcache
 .env
+dump.rdb
+
 
 ## Node.js
 
