@@ -1,26 +1,40 @@
 import { Server, Socket } from 'socket.io';
+import { HydratedDocument } from 'mongoose';
 
 import {
-  AddChannelReq, AddChannelResp, GetChannelReq, GetChannelResp, GetChannelsResp,
+  AddChannelReq,
+  AddChannelResp,
+  ChannelEntry,
+  ChannelInfo,
+  ChannelSummary,
+  GetChannelReq,
+  GetChannelResp,
+  GetChannelsResp,
 } from '@/types';
 import { addChannel, getChannel, getChannels } from '@/services/channelCollection.service';
+import { getChannelLastReplyTime, getChannelReplyCount } from '@/services/messageCollection.service';
+
+const parseChannelSummary = async ({
+  id,
+  name,
+  isTop,
+  createdAt,
+}: HydratedDocument<ChannelEntry>): Promise<ChannelSummary> => ({
+  id,
+  name,
+  replyCount: await getChannelReplyCount(id),
+  lastReplyTime: ((await getChannelLastReplyTime(id)) || createdAt).toISOString(),
+  isTop,
+});
 
 const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
   getChannels()
     .then((channels) => {
-      const parsedChannels = channels.map(({
-        id, name, isTop, createdAt,
-      }) => ({
-        id,
-        name,
-        replyCount: 0, // TODO: get reply count from thread collections
-        lastReplyTime: createdAt.toISOString(), // TODO: get last reply time from thread collections
-        isTop,
-      }));
-
-      callback({
-        code: 200,
-        data: parsedChannels,
+      Promise.all(channels.map(parseChannelSummary)).then((parsedChannels) => {
+        callback({
+          code: 200,
+          data: parsedChannels,
+        });
       });
     })
     .catch((error) => {
@@ -31,6 +45,10 @@ const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
       });
     });
 };
+
+const parseChannelInfo = ({ name }: HydratedDocument<ChannelEntry>): ChannelInfo => ({
+  name,
+});
 
 const onGetChannelReq = ({ id }: GetChannelReq, callback: (resp: GetChannelResp) => void): void => {
   getChannel(id)
@@ -43,9 +61,7 @@ const onGetChannelReq = ({ id }: GetChannelReq, callback: (resp: GetChannelResp)
       } else {
         callback({
           code: 200,
-          data: {
-            name: channel.name,
-          },
+          data: parseChannelInfo(channel),
         });
       }
     })
