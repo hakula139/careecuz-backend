@@ -19,3 +19,5 @@ export const setUserId = (
   userId: string,
   expire: number = 60 * 60, // will expire in an hour by default
 ): Promise<string | null> => db.set(`${REDIS_KEY_PREFIX}socket:${socketId}`, userId, { EX: expire });
+
+export const delUserId = (socketId: string): Promise<number> => db.del(`${REDIS_KEY_PREFIX}socket:${socketId}`);

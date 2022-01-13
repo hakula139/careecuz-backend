@@ -1,7 +1,9 @@
 import { Server, Socket } from 'socket.io';
 
 import { LISTEN_PORT } from './configs';
-import { channelHandlers, messageHandlers, userHandlers } from './handlers';
+import {
+  channelHandlers, globalHandlers, messageHandlers, userHandlers,
+} from './handlers';
 import { dbManager } from './services/database.service';
 import { redisManager } from './services/redis.service';
 
@@ -18,6 +20,7 @@ await dbManager.connect();
 await redisManager.connect();
 
 io.on('connection', (socket: Socket) => {
+  globalHandlers(io, socket);
   channelHandlers(io, socket);
   messageHandlers(io, socket);
   userHandlers(io, socket);
