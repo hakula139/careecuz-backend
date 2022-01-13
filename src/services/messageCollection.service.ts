@@ -23,7 +23,7 @@ export const getChannelLastReplyTime = (channelId: string): Promise<Date | null>
   });
 
 export const getMessage = (id: string): Promise<HydratedDocument<MessageEntry> | null> =>
-  MessageModel.findById(id).populate('replies').exec();
+  MessageModel.findById(id).populate('user').populate('replies').exec();
 
 export const updateMessageLastReplyTime = (
   id: string,

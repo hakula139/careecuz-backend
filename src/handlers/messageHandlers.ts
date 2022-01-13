@@ -35,7 +35,7 @@ const parseMessageSummary = ({
   id,
   user: parseUser(user),
   content,
-  replyTo,
+  replyTo: replyTo?.toString(),
   replyCount,
   time: createdAt.toISOString(),
   lastReplyTime: updatedAt.toISOString(),
@@ -67,7 +67,7 @@ const parseMessage = ({
   id,
   user: parseUser(user),
   content,
-  replyTo,
+  replyTo: replyTo?.toString(),
   replies: replies.map(parseMessage),
   time: createdAt.toISOString(),
 });

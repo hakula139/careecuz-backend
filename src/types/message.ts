@@ -1,4 +1,4 @@
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 
 import { User, UserEntry } from './user';
 
@@ -26,7 +26,7 @@ export interface MessageEntry {
   channelId: string;
   user: HydratedDocument<UserEntry>;
   content: string;
-  replyTo?: string;
+  replyTo?: mongoose.Types.ObjectId;
   replies: HydratedDocument<MessageEntry>[];
   replyCount: number;
   createdAt: Date;
