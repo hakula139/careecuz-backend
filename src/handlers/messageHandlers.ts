@@ -42,10 +42,10 @@ const parseMessageSummary = ({
 });
 
 const onGetHistoryMessagesReq = (
-  { lastMessageId, maxMessageCount }: GetHistoryMessagesReq,
+  { channelId, lastMessageId, maxMessageCount }: GetHistoryMessagesReq,
   callback: (resp: GetHistoryMessagesResp) => void,
 ): void => {
-  getMessages(lastMessageId, maxMessageCount)
+  getMessages(channelId, lastMessageId, maxMessageCount)
     .then((messages) => {
       callback({
         code: 200,
