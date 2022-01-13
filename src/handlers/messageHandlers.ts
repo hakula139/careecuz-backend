@@ -11,6 +11,8 @@ import {
   Message,
   MessageEntry,
   MessageSummary,
+  PushNewMessage,
+  PushNewMessageSummary,
   User,
   UserEntry,
 } from '@/types';
@@ -97,6 +99,7 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
 };
 
 const onAddMessageReq = (
+  { sockets }: Server,
   socket: Socket,
   { channelId, data }: AddMessageReq,
   callback: (resp: AddMessageResp) => void,
@@ -109,6 +112,19 @@ const onAddMessageReq = (
           callback({
             code: 200,
             id,
+          });
+
+          getMessage(id).then((message) => {
+            console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId}`);
+            if (message!.replyTo) {
+              sockets.in(channelId).emit('message:new', {
+                data: parseMessage(message!),
+              } as PushNewMessage);
+            } else {
+              sockets.in(channelId).emit('message:new:summary', {
+                data: parseMessageSummary(message!),
+              } as PushNewMessageSummary);
+            }
           });
         })
         .catch((error) => {
@@ -127,11 +143,11 @@ const onAddMessageReq = (
   });
 };
 
-const messageHandlers = (_io: Server, socket: Socket) => {
+const messageHandlers = (io: Server, socket: Socket) => {
   socket.on('messages:get:history', onGetHistoryMessagesReq);
   socket.on('message:get', onGetMessageReq);
   socket.on('message:add', (req: AddMessageReq, callback: (resp: AddMessageResp) => void): void => {
-    onAddMessageReq(socket, req, callback);
+    onAddMessageReq(io, socket, req, callback);
   });
 };
 

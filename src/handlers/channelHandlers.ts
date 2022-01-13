@@ -10,6 +10,8 @@ import {
   GetChannelReq,
   GetChannelResp,
   GetChannelsResp,
+  JoinChannel,
+  LeaveChannel,
 } from '@/types';
 import { addChannel, getChannel, getChannels } from '@/services/channelCollection.service';
 
@@ -90,10 +92,26 @@ const onAddChannelReq = ({ data }: AddChannelReq, callback: (resp: AddChannelRes
     });
 };
 
+const onJoinChannel = (socket: Socket, { id }: JoinChannel): void => {
+  console.log('[DEBUG]', '(channel:join)', `${socket.id} joins ${id}`);
+  socket.join(id);
+};
+
+const onLeaveChannel = (socket: Socket, { id }: LeaveChannel): void => {
+  console.log('[DEBUG]', '(channel:leave)', `${socket.id} leaves ${id}`);
+  socket.leave(id);
+};
+
 const channelHandlers = (_io: Server, socket: Socket) => {
   socket.on('channels:get', onGetChannelsReq);
   socket.on('channel:get', onGetChannelReq);
   socket.on('channel:add', onAddChannelReq);
+  socket.on('channel:join', (req: JoinChannel): void => {
+    onJoinChannel(socket, req);
+  });
+  socket.on('channel:leave', (req: LeaveChannel): void => {
+    onLeaveChannel(socket, req);
+  });
 };
 
 export default channelHandlers;
