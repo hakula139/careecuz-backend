@@ -27,6 +27,8 @@ export interface MessageEntry {
   user: HydratedDocument<UserEntry>;
   content: string;
   replyTo?: string;
+  replies: HydratedDocument<MessageEntry>[];
+  replyCount: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -14,14 +14,7 @@ import {
   User,
   UserEntry,
 } from '@/types';
-import {
-  addMessage,
-  getMessage,
-  getMessageLastReplyTime,
-  getMessageReplies,
-  getMessageReplyCount,
-  getMessages,
-} from '@/services/messageCollection.service';
+import { addMessage, getMessage, getMessages } from '@/services/messageCollection.service';
 import { getUserId } from '@/services/userRedis.service';
 
 const parseUser = ({ id, isBlocked, isRemoved }: HydratedDocument<UserEntry>): User => ({
@@ -30,20 +23,22 @@ const parseUser = ({ id, isBlocked, isRemoved }: HydratedDocument<UserEntry>): U
   isRemoved,
 });
 
-const parseMessageSummary = async ({
+const parseMessageSummary = ({
   id,
   user,
   content,
   replyTo,
+  replyCount,
   createdAt,
-}: HydratedDocument<MessageEntry>): Promise<MessageSummary> => ({
+  updatedAt,
+}: HydratedDocument<MessageEntry>): MessageSummary => ({
   id,
   user: parseUser(user),
   content,
   replyTo,
+  replyCount,
   time: createdAt.toISOString(),
-  replyCount: await getMessageReplyCount(id),
-  lastReplyTime: ((await getMessageLastReplyTime(id)) || createdAt).toISOString(),
+  lastReplyTime: updatedAt.toISOString(),
 });
 
 const onGetHistoryMessagesReq = (
@@ -52,11 +47,9 @@ const onGetHistoryMessagesReq = (
 ): void => {
   getMessages(lastMessageId, maxMessageCount)
     .then((messages) => {
-      Promise.all(messages.map(parseMessageSummary)).then((parsedMessages) => {
-        callback({
-          code: 200,
-          data: parsedMessages,
-        });
+      callback({
+        code: 200,
+        data: messages.map(parseMessageSummary),
       });
     })
     .catch((error) => {
@@ -68,19 +61,15 @@ const onGetHistoryMessagesReq = (
     });
 };
 
-const parseMessage = async ({
-  id,
-  user,
-  content,
-  replyTo,
-  createdAt,
-}: HydratedDocument<MessageEntry>): Promise<Message> => ({
+const parseMessage = ({
+  id, user, content, replyTo, replies, createdAt,
+}: HydratedDocument<MessageEntry>): Message => ({
   id,
   user: parseUser(user),
   content,
   replyTo,
+  replies: replies.map(parseMessage),
   time: createdAt.toISOString(),
-  replies: await Promise.all((await getMessageReplies(id)).map(parseMessage)),
 });
 
 const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
@@ -92,11 +81,9 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
           message: '消息不存在',
         });
       } else {
-        parseMessage(message).then((parsedMessage) => {
-          callback({
-            code: 200,
-            data: parsedMessage,
-          });
+        callback({
+          code: 200,
+          data: parseMessage(message),
         });
       }
     })

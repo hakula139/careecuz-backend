@@ -20,7 +20,8 @@ const messageSchema = new Schema<MessageEntry>(
       required: true,
     },
     replyTo: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message',
     },
   },
   {
@@ -28,6 +29,19 @@ const messageSchema = new Schema<MessageEntry>(
     timestamps: true,
   },
 );
+
+messageSchema.virtual('replies', {
+  ref: 'Message',
+  localField: '_id',
+  foreignField: 'replyTo',
+});
+
+messageSchema.virtual('replyCount', {
+  ref: 'Message',
+  localField: '_id',
+  foreignField: 'replyTo',
+  count: true,
+});
 
 const MessageModel = model<MessageEntry>('Message', messageSchema);
 export default MessageModel;
