@@ -2,6 +2,7 @@ import { HydratedDocument } from 'mongoose';
 
 import { MessageModel } from '@/models';
 import { MessageEntry, MessageForm } from '@/types';
+import { updateChannelLastReplyTime } from './channelCollection.service';
 
 export const getMessages = (
   lastMessageId?: string,
@@ -12,15 +13,6 @@ export const getMessages = (
   if (maxMessageCount) query = query.sort({ _id: -1 }).limit(maxMessageCount).sort({ _id: 1 });
   return query.populate('user').populate('replyCount').exec();
 };
-
-export const getChannelReplyCount = (channelId: string): Promise<number> => MessageModel.count({ channelId }).exec();
-
-export const getChannelLastReplyTime = (channelId: string): Promise<Date | null> =>
-  new Promise((resolve) => {
-    MessageModel.findOne({ channelId }, 'createdAt', { sort: { _id: -1 } })
-      .exec()
-      .then((message) => resolve(message?.createdAt || null));
-  });
 
 export const getMessage = (id: string): Promise<HydratedDocument<MessageEntry> | null> =>
   new Promise((resolve) => {
@@ -59,11 +51,9 @@ export const addMessage = (
     });
     message.save().then((result) => {
       if (replyTo) {
-        updateMessageLastReplyTime(replyTo, result.createdAt).then(() => {
-          resolve(result);
-        });
-      } else {
-        resolve(result);
+        updateMessageLastReplyTime(replyTo, result.createdAt);
       }
+      updateChannelLastReplyTime(channelId, result.createdAt);
+      resolve(result);
     });
   });

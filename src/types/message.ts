@@ -23,7 +23,7 @@ export interface Message extends MessageBase {
 }
 
 export interface MessageEntry {
-  channelId: string;
+  channelId: mongoose.Types.ObjectId;
   user: HydratedDocument<UserEntry>;
   content: string;
   replyTo?: mongoose.Types.ObjectId;

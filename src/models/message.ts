@@ -7,7 +7,7 @@ const { model, Schema } = mongoose;
 const messageSchema = new Schema<MessageEntry>(
   {
     channelId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     user: {

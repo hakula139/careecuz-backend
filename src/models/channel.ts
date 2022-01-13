@@ -22,5 +22,18 @@ const channelSchema = new Schema<ChannelEntry>(
   },
 );
 
+channelSchema.virtual('replies', {
+  ref: 'Message',
+  localField: '_id',
+  foreignField: 'channelId',
+});
+
+channelSchema.virtual('replyCount', {
+  ref: 'Message',
+  localField: '_id',
+  foreignField: 'channelId',
+  count: true,
+});
+
 const ChannelModel = model<ChannelEntry>('Channel', channelSchema);
 export default ChannelModel;

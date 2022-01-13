@@ -12,29 +12,27 @@ import {
   GetChannelsResp,
 } from '@/types';
 import { addChannel, getChannel, getChannels } from '@/services/channelCollection.service';
-import { getChannelLastReplyTime, getChannelReplyCount } from '@/services/messageCollection.service';
 
-const parseChannelSummary = async ({
+const parseChannelSummary = ({
   id,
   name,
+  replyCount,
   isTop,
-  createdAt,
-}: HydratedDocument<ChannelEntry>): Promise<ChannelSummary> => ({
+  updatedAt,
+}: HydratedDocument<ChannelEntry>): ChannelSummary => ({
   id,
   name,
-  replyCount: await getChannelReplyCount(id),
-  lastReplyTime: ((await getChannelLastReplyTime(id)) || createdAt).toISOString(),
+  replyCount,
   isTop,
+  lastReplyTime: updatedAt.toISOString(),
 });
 
 const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
   getChannels()
     .then((channels) => {
-      Promise.all(channels.map(parseChannelSummary)).then((parsedChannels) => {
-        callback({
-          code: 200,
-          data: parsedChannels,
-        });
+      callback({
+        code: 200,
+        data: channels.map(parseChannelSummary),
       });
     })
     .catch((error) => {

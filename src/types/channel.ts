@@ -13,6 +13,7 @@ export interface ChannelSummary extends ChannelInfo {
 
 export interface ChannelEntry {
   name: string;
+  replyCount: number;
   isTop: boolean;
   createdAt: Date;
   updatedAt: Date;
