@@ -23,7 +23,21 @@ export const getChannelLastReplyTime = (channelId: string): Promise<Date | null>
   });
 
 export const getMessage = (id: string): Promise<HydratedDocument<MessageEntry> | null> =>
-  MessageModel.findById(id).populate('user').populate('replies').exec();
+  new Promise((resolve) => {
+    MessageModel.findById(id)
+      .populate('user')
+      .populate('replies')
+      .then((message) => {
+        if (message && message.replies) {
+          // Recursively populate replies.
+          Promise.all(message.replies.map((reply) => getMessage(reply.id))).then((replies) => {
+            resolve(Object.assign(message, { replies }));
+          });
+        } else {
+          resolve(Object.assign(message, { replies: [] }));
+        }
+      });
+  });
 
 export const updateMessageLastReplyTime = (
   id: string,
@@ -43,13 +57,13 @@ export const addMessage = (
       content,
       replyTo,
     });
-    message.save().then((messageEntry) => {
+    message.save().then((result) => {
       if (replyTo) {
-        updateMessageLastReplyTime(replyTo, messageEntry.createdAt).then(() => {
-          resolve(messageEntry);
+        updateMessageLastReplyTime(replyTo, result.createdAt).then(() => {
+          resolve(result);
         });
       } else {
-        resolve(messageEntry);
+        resolve(result);
       }
     });
   });
