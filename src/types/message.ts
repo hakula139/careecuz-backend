@@ -1,12 +1,14 @@
-import { User } from './user';
+import mongoose, { HydratedDocument } from 'mongoose';
+
+import { User, UserEntry } from './user';
 
 export interface MessageForm {
   content: string;
-  replyTo: number;
+  replyTo?: string;
 }
 
 interface MessageBase extends MessageForm {
-  id: number;
+  id: string;
   user: User;
   time: string;
 }
@@ -18,4 +20,15 @@ export interface MessageSummary extends MessageBase {
 
 export interface Message extends MessageBase {
   replies: Message[];
+}
+
+export interface MessageEntry {
+  channelId: mongoose.Types.ObjectId;
+  user: HydratedDocument<UserEntry>;
+  content: string;
+  replyTo?: mongoose.Types.ObjectId;
+  replies: HydratedDocument<MessageEntry>[];
+  replyCount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

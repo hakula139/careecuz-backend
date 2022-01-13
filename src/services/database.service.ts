@@ -32,3 +32,5 @@ export default class DatabaseManager {
     }
   }
 }
+
+export const dbManager = new DatabaseManager();
