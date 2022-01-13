@@ -12,6 +12,7 @@ import {
   MessageEntry,
   MessageSummary,
   PushNewMessage,
+  PushNewMessageSummary,
   User,
   UserEntry,
 } from '@/types';
@@ -115,9 +116,15 @@ const onAddMessageReq = (
 
           getMessage(id).then((message) => {
             console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId}`);
-            sockets.in(channelId).emit('message:new', {
-              data: parseMessageSummary(message!),
-            } as PushNewMessage);
+            if (message!.replyTo) {
+              sockets.in(channelId).emit('message:new', {
+                data: parseMessage(message!),
+              } as PushNewMessage);
+            } else {
+              sockets.in(channelId).emit('message:new:summary', {
+                data: parseMessageSummary(message!),
+              } as PushNewMessageSummary);
+            }
           });
         })
         .catch((error) => {
