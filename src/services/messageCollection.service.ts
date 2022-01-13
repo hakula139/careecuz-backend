@@ -11,7 +11,7 @@ export const getMessages = (
 ): Promise<HydratedDocument<MessageEntry>[]> => {
   let query = MessageModel.find({ channelId }).where('replyTo').exists(false);
   if (lastMessageId) query = query.where('_id').lt(lastMessageId as any); // workaround
-  if (maxMessageCount) query = query.sort({ _id: -1 }).limit(maxMessageCount).sort({ _id: 1 });
+  if (maxMessageCount) query = query.sort({ _id: -1 }).limit(maxMessageCount);
   return query.populate('user').populate('replyCount').exec();
 };
 
