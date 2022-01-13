@@ -8,10 +8,11 @@ import {
 import { addUser, getUserByEmail } from '@/services/userCollection.service';
 import { getUserToken, setUserId, setUserToken } from '@/services/userRedis.service';
 
-const createSession = (userId: string, callback: (resp: UserAuthResp) => void): void => {
+const createSession = (socketId: string, userId: string, callback: (resp: UserAuthResp) => void): void => {
   const token = randomBytes(64).toString('hex');
-  setUserToken(userId, token).then(() => {
+  Promise.all([setUserToken(userId, token), setUserId(socketId, userId)]).then(() => {
     console.log('[DEBUG]', '(user:login)', `token saved: (${userId}, ${token})`);
+    console.log('[DEBUG]', '(user:info)', `user id saved: (${socketId}, ${userId})`);
     callback({
       code: 200,
       userId,
@@ -20,7 +21,7 @@ const createSession = (userId: string, callback: (resp: UserAuthResp) => void): 
   });
 };
 
-const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
+const onUserLoginReq = (socket: Socket, { data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
   const { email, password } = data;
   getUserByEmail(email)
     .then((user) => {
@@ -30,7 +31,7 @@ const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) =>
           message: '用户未注册',
         });
       } else if (compareSync(password, user.password)) {
-        createSession(user.id, callback);
+        createSession(socket.id, user.id, callback);
       } else {
         callback({
           code: 403,
@@ -47,7 +48,7 @@ const onUserLoginReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) =>
     });
 };
 
-const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
+const onUserRegisterReq = (socket: Socket, { data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
   const { email } = data;
   getUserByEmail(email)
     .then((user) => {
@@ -60,7 +61,7 @@ const onUserRegisterReq = ({ data }: UserAuthReq, callback: (resp: UserAuthResp)
       } else {
         addUser(data).then(({ id }) => {
           console.log('[INFO ]', '(user:register)', `${email}: registered`);
-          createSession(id, callback);
+          createSession(socket.id, id, callback);
         });
       }
     })
@@ -98,8 +99,12 @@ const onPushUserInfo = (socket: Socket, { userId, token }: PushUserInfo, callbac
 };
 
 const userHandlers = (_io: Server, socket: Socket) => {
-  socket.on('user:login', onUserLoginReq);
-  socket.on('user:register', onUserRegisterReq);
+  socket.on('user:login', (req: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
+    onUserLoginReq(socket, req, callback);
+  });
+  socket.on('user:register', (req: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
+    onUserRegisterReq(socket, req, callback);
+  });
   socket.on('user:info', (req: PushUserInfo, callback: (resp: Resp) => void): void => {
     onPushUserInfo(socket, req, callback);
   });
