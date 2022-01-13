@@ -21,13 +21,13 @@ export const getMessage = (id: string): Promise<HydratedDocument<MessageEntry> |
       .populate('user')
       .populate('replies')
       .then((message) => {
-        if (message && message.replies) {
+        if (message) {
           // Recursively populate replies.
-          Promise.all(message.replies.map((reply) => getMessage(reply.id))).then((replies) => {
+          Promise.all((message.replies || []).map((reply) => getMessage(reply.id))).then((replies) => {
             resolve(Object.assign(message, { replies }));
           });
         } else {
-          resolve(Object.assign(message, { replies: [] }));
+          resolve(null);
         }
       });
   });
