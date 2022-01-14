@@ -1,12 +1,12 @@
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 import { MessageModel } from '@/models';
 import { MessageEntry, MessageForm } from '@/types';
 import { updateChannelLastReplyTime } from './channelCollection.service';
 
 export const getMessages = (
-  channelId: string,
-  lastMessageId?: string,
+  channelId: string | Types.ObjectId,
+  lastMessageId?: string | Types.ObjectId,
   maxMessageCount?: number,
 ): Promise<HydratedDocument<MessageEntry>[]> => {
   let query = MessageModel.find({ channelId }).where('replyTo').exists(false);
@@ -15,7 +15,7 @@ export const getMessages = (
   return query.populate('user').populate('replyCount').exec();
 };
 
-export const getMessage = (id: string): Promise<HydratedDocument<MessageEntry> | null> =>
+export const getMessage = (id: string | Types.ObjectId): Promise<HydratedDocument<MessageEntry> | null> =>
   new Promise((resolve) => {
     MessageModel.findById(id)
       .populate('user')
@@ -33,14 +33,14 @@ export const getMessage = (id: string): Promise<HydratedDocument<MessageEntry> |
   });
 
 export const updateMessageLastReplyTime = (
-  id: string,
+  id: string | Types.ObjectId,
   lastReplyTime: Date,
 ): Promise<HydratedDocument<MessageEntry> | null> =>
   MessageModel.findByIdAndUpdate(id, { updatedAt: lastReplyTime }).exec();
 
 export const addMessage = (
-  channelId: string,
-  userId: string,
+  channelId: string | Types.ObjectId,
+  userId: string | Types.ObjectId,
   { content, replyTo }: MessageForm,
 ): Promise<HydratedDocument<MessageEntry>> =>
   new Promise((resolve) => {

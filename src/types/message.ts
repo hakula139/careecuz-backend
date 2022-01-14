@@ -1,4 +1,4 @@
-import mongoose, { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 import { User, UserEntry } from './user';
 
@@ -7,7 +7,7 @@ export interface MessageForm {
   replyTo?: string;
 }
 
-interface MessageBase extends MessageForm {
+export interface MessageBase extends MessageForm {
   id: string;
   user: User;
   time: string;
@@ -23,10 +23,10 @@ export interface Message extends MessageBase {
 }
 
 export interface MessageEntry {
-  channelId: mongoose.Types.ObjectId;
+  channelId: Types.ObjectId;
   user: HydratedDocument<UserEntry>;
   content: string;
-  replyTo?: mongoose.Types.ObjectId;
+  replyTo?: Types.ObjectId;
   replies: HydratedDocument<MessageEntry>[];
   replyCount: number;
   createdAt: Date;

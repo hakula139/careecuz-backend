@@ -9,6 +9,7 @@ const messageSchema = new Schema<MessageEntry>(
     channelId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      ref: 'Channel',
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

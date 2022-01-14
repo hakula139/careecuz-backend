@@ -9,14 +9,17 @@ import {
   GetMessageReq,
   GetMessageResp,
   Message,
+  MessageBase,
   MessageEntry,
   MessageSummary,
   PushNewMessage,
   PushNewMessageSummary,
+  PushNewNotification,
   User,
   UserEntry,
 } from '@/types';
 import { addMessage, getMessage, getMessages } from '@/services/messageCollection.service';
+import { addNotification } from '@/services/notificationCollection.service';
 import { getUserId } from '@/services/userRedis.service';
 
 const parseUser = ({ id, isBlocked, isRemoved }: HydratedDocument<UserEntry>): User => ({
@@ -25,22 +28,20 @@ const parseUser = ({ id, isBlocked, isRemoved }: HydratedDocument<UserEntry>): U
   isRemoved,
 });
 
-const parseMessageSummary = ({
-  id,
-  user,
-  content,
-  replyTo,
-  replyCount,
-  createdAt,
-  updatedAt,
-}: HydratedDocument<MessageEntry>): MessageSummary => ({
+const parseMessageBase = ({
+  id, user, content, replyTo, createdAt,
+}: HydratedDocument<MessageEntry>): MessageBase => ({
   id,
   user: parseUser(user),
   content,
   replyTo: replyTo?.toString(),
-  replyCount,
   time: createdAt.toISOString(),
-  lastReplyTime: updatedAt.toISOString(),
+});
+
+const parseMessageSummary = (message: HydratedDocument<MessageEntry>): MessageSummary => ({
+  ...parseMessageBase(message),
+  replyCount: message.replyCount,
+  lastReplyTime: message.updatedAt.toISOString(),
 });
 
 const onGetHistoryMessagesReq = (
@@ -63,15 +64,9 @@ const onGetHistoryMessagesReq = (
     });
 };
 
-const parseMessage = ({
-  id, user, content, replyTo, replies, createdAt,
-}: HydratedDocument<MessageEntry>): Message => ({
-  id,
-  user: parseUser(user),
-  content,
-  replyTo: replyTo?.toString(),
-  replies: replies.map(parseMessage),
-  time: createdAt.toISOString(),
+const parseMessage = (message: HydratedDocument<MessageEntry>): Message => ({
+  ...parseMessageBase(message),
+  replies: message.replies.map(parseMessage),
 });
 
 const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
@@ -98,8 +93,28 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
     });
 };
 
+const pushNewMessage = ({ sockets }: Server, channelId: string, message: HydratedDocument<MessageEntry>): void => {
+  if (message.replyTo) {
+    sockets.in(channelId).emit('message:new', {
+      data: parseMessage(message!),
+    } as PushNewMessage);
+  } else {
+    sockets.in(channelId).emit('message:new:summary', {
+      data: parseMessageSummary(message!),
+    } as PushNewMessageSummary);
+  }
+};
+
+const pushNewNotification = ({ sockets }: Server, replyTo: string, message: HydratedDocument<MessageEntry>): void => {
+  sockets.in(replyTo).emit('notification:new', {
+    data: {
+      message: parseMessageBase(message),
+    },
+  } as PushNewNotification);
+};
+
 const onAddMessageReq = (
-  { sockets }: Server,
+  io: Server,
   socket: Socket,
   { channelId, data }: AddMessageReq,
   callback: (resp: AddMessageResp) => void,
@@ -107,24 +122,29 @@ const onAddMessageReq = (
   getUserId(socket.id).then((userId) => {
     if (userId) {
       addMessage(channelId, userId, data)
-        .then(({ id }) => {
+        .then(({ id, replyTo }) => {
           console.log('[INFO ]', '(message:add)', `${id}: added`);
-          callback({
-            code: 200,
-            id,
-          });
 
           getMessage(id).then((message) => {
             console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId}`);
-            if (message!.replyTo) {
-              sockets.in(channelId).emit('message:new', {
-                data: parseMessage(message!),
-              } as PushNewMessage);
-            } else {
-              sockets.in(channelId).emit('message:new:summary', {
-                data: parseMessageSummary(message!),
-              } as PushNewMessageSummary);
-            }
+            pushNewMessage(io, channelId, message!);
+          });
+
+          if (replyTo) {
+            getMessage(replyTo).then((message) => {
+              if (message) {
+                addNotification(userId, replyTo, message.id).then((notification) => {
+                  console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
+                  console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${replyTo}`);
+                  pushNewNotification(io, replyTo.toString(), message);
+                });
+              }
+            });
+          }
+
+          callback({
+            code: 200,
+            id,
           });
         })
         .catch((error) => {
