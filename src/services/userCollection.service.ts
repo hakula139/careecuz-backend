@@ -1,10 +1,11 @@
 import { hash } from 'bcrypt';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 import { UserModel } from '@/models';
 import { UserEntry, UserForm } from '@/types';
 
-export const getUser = (id: string): Promise<HydratedDocument<UserEntry> | null> => UserModel.findOne({ id }).exec();
+export const getUser = (id: string | Types.ObjectId): Promise<HydratedDocument<UserEntry> | null> =>
+  UserModel.findOne({ id }).exec();
 
 export const getUserByEmail = (email: string): Promise<HydratedDocument<UserEntry> | null> =>
   UserModel.findOne({ email }).exec();
