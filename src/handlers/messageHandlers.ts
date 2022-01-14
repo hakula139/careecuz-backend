@@ -136,7 +136,7 @@ const onAddMessageReq = (
                 addNotification(userId, replyTo, message.id).then((notification) => {
                   console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
                   console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${replyTo}`);
-                  pushNewNotification(io, replyTo.toString(), message);
+                  pushNewNotification(io, message.user.id, message);
                 });
               }
             });
