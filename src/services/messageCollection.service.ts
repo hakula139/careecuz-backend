@@ -16,7 +16,7 @@ export const getMessages = (
 };
 
 export const getMessage = (id: string | Types.ObjectId): Promise<HydratedDocument<MessageEntry> | null> =>
-  MessageModel.findById(id).populate('user').populate('replies').exec();
+  MessageModel.findById(id).populate('user').populate({ path: 'replies', populate: 'user' }).exec();
 
 export const updateMessageLastReplyTime = (
   id: string | Types.ObjectId,

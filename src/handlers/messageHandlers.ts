@@ -113,8 +113,14 @@ const pushNewMessage = (
   }
 };
 
-const parseNotification = ({ fromUserId, threadId, message }: HydratedDocument<NotificationEntry>): Notification => ({
+const parseNotification = ({
+  fromUserId,
+  channelId,
+  threadId,
+  message,
+}: HydratedDocument<NotificationEntry>): Notification => ({
   fromUserId: fromUserId.toString(),
+  channelId: channelId.toString(),
   threadId: threadId.toString(),
   messageId: (message as Types.ObjectId).toString(),
 });
@@ -150,7 +156,7 @@ const onAddMessageReq = (
               getMessage(replyTo).then((repliedMessage) => {
                 if (repliedMessage) {
                   const { id: toUserId } = repliedMessage.user;
-                  addNotification(fromUserId, toUserId, threadId, id).then((notification) => {
+                  addNotification(fromUserId, toUserId, channelId, threadId, id).then((notification) => {
                     console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
                     console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
                     pushNewNotification(io, toUserId, notification);
