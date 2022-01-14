@@ -128,19 +128,17 @@ const onAddMessageReq = (
           getMessage(id).then((message) => {
             console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId}`);
             pushNewMessage(io, channelId, message!);
-          });
 
-          if (replyTo) {
-            getMessage(replyTo).then((message) => {
-              if (message) {
-                addNotification(userId, replyTo, message.id).then((notification) => {
+            if (replyTo) {
+              getMessage(replyTo).then((replyToMessage) => {
+                addNotification(userId, replyTo, message!.id).then((notification) => {
                   console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
                   console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${replyTo}`);
-                  pushNewNotification(io, message.user.id, message);
+                  pushNewNotification(io, replyToMessage!.user.id, message!);
                 });
-              }
-            });
-          }
+              });
+            }
+          });
 
           callback({
             code: 200,
