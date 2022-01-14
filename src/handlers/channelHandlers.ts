@@ -1,33 +1,16 @@
 import { Server, Socket } from 'socket.io';
-import { HydratedDocument } from 'mongoose';
 
 import {
   AddChannelReq,
   AddChannelResp,
-  ChannelEntry,
-  ChannelInfo,
-  ChannelSummary,
   GetChannelReq,
   GetChannelResp,
   GetChannelsResp,
   JoinChannel,
   LeaveChannel,
 } from '@/types';
+import { parseChannelInfo, parseChannelSummary } from '@/parsers';
 import { addChannel, getChannel, getChannels } from '@/services/channelCollection.service';
-
-const parseChannelSummary = ({
-  id,
-  name,
-  replyCount,
-  isTop,
-  updatedAt,
-}: HydratedDocument<ChannelEntry>): ChannelSummary => ({
-  id,
-  name,
-  replyCount,
-  isTop,
-  lastReplyTime: updatedAt.toISOString(),
-});
 
 const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
   getChannels()
@@ -45,10 +28,6 @@ const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
       });
     });
 };
-
-const parseChannelInfo = ({ name }: HydratedDocument<ChannelEntry>): ChannelInfo => ({
-  name,
-});
 
 const onGetChannelReq = ({ id }: GetChannelReq, callback: (resp: GetChannelResp) => void): void => {
   getChannel(id)

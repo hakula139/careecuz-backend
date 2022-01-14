@@ -31,6 +31,11 @@ const notificationSchema = new Schema<NotificationEntry>(
       required: true,
       ref: 'Message',
     },
+    replyToMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Message',
+    },
     isRead: {
       type: Boolean,
       required: true,

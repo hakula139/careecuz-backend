@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
 import {
   AddMessageReq,
@@ -8,43 +8,15 @@ import {
   GetHistoryMessagesResp,
   GetMessageReq,
   GetMessageResp,
-  Message,
-  MessageBase,
   MessageEntry,
-  MessageSummary,
-  Notification,
-  NotificationEntry,
   PushNewMessage,
   PushNewMessageSummary,
-  PushNewNotification,
-  User,
-  UserEntry,
 } from '@/types';
+import { parseMessage, parseMessageSummary } from '@/parsers';
 import { addMessage, getMessage, getMessages } from '@/services/messageCollection.service';
 import { addNotification } from '@/services/notificationCollection.service';
 import { getUserId } from '@/services/userRedis.service';
-
-const parseUser = ({ id, isBlocked, isRemoved }: HydratedDocument<UserEntry>): User => ({
-  id,
-  isBlocked,
-  isRemoved,
-});
-
-const parseMessageBase = ({
-  id, user, content, replyTo, createdAt,
-}: HydratedDocument<MessageEntry>): MessageBase => ({
-  id,
-  user: parseUser(user),
-  content,
-  replyTo: replyTo?.toString(),
-  time: createdAt.toISOString(),
-});
-
-const parseMessageSummary = (message: HydratedDocument<MessageEntry>): MessageSummary => ({
-  ...parseMessageBase(message),
-  replyCount: message.replyCount,
-  lastReplyTime: message.updatedAt.toISOString(),
-});
+import { pushNewNotification } from './notificationHandlers';
 
 const onGetHistoryMessagesReq = (
   { channelId, lastMessageId, maxMessageCount }: GetHistoryMessagesReq,
@@ -65,12 +37,6 @@ const onGetHistoryMessagesReq = (
       });
     });
 };
-
-const parseMessage = (message: HydratedDocument<MessageEntry>): Message => ({
-  ...parseMessageBase(message),
-  threadId: message.threadId?.toString(),
-  replies: (message.replies || []).map(parseMessage),
-});
 
 const onGetMessageReq = ({ threadId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
   getMessage(threadId)
@@ -113,28 +79,6 @@ const pushNewMessage = (
   }
 };
 
-const parseNotification = ({
-  fromUserId,
-  channelId,
-  threadId,
-  message,
-}: HydratedDocument<NotificationEntry>): Notification => ({
-  fromUserId: fromUserId.toString(),
-  channelId: channelId.toString(),
-  threadId: threadId.toString(),
-  messageId: (message as Types.ObjectId).toString(),
-});
-
-const pushNewNotification = (
-  { sockets }: Server,
-  toUserId: string,
-  notification: HydratedDocument<NotificationEntry>,
-): void => {
-  sockets.in(toUserId).emit('notification:new', {
-    data: parseNotification(notification),
-  } as PushNewNotification);
-};
-
 const onAddMessageReq = (
   io: Server,
   socket: Socket,
@@ -156,7 +100,7 @@ const onAddMessageReq = (
               getMessage(replyTo).then((repliedMessage) => {
                 if (repliedMessage) {
                   const { id: toUserId } = repliedMessage.user;
-                  addNotification(fromUserId, toUserId, channelId, threadId, id).then((notification) => {
+                  addNotification(fromUserId, toUserId, channelId, threadId, id, replyTo).then((notification) => {
                     console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
                     console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
                     pushNewNotification(io, toUserId, notification);

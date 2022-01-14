@@ -3,8 +3,8 @@ import { HydratedDocument, Types } from 'mongoose';
 import { NotificationModel } from '@/models';
 import { NotificationEntry } from '@/types';
 
-export const getNotifications = (userId: string | Types.ObjectId): Promise<HydratedDocument<NotificationEntry>[]> =>
-  NotificationModel.find({ toUserId: userId }).populate('message').exec();
+export const getNotifications = (toUserId: string | Types.ObjectId): Promise<HydratedDocument<NotificationEntry>[]> =>
+  NotificationModel.find({ toUserId }).populate('message').populate('replyToMessage').exec();
 
 export const addNotification = (
   fromUserId: string | Types.ObjectId,
@@ -12,6 +12,7 @@ export const addNotification = (
   channelId: string | Types.ObjectId,
   threadId: string | Types.ObjectId,
   messageId: string | Types.ObjectId,
+  replyTo: string | Types.ObjectId,
 ): Promise<HydratedDocument<NotificationEntry>> => {
   const notification = new NotificationModel({
     fromUserId,
@@ -19,6 +20,7 @@ export const addNotification = (
     channelId,
     threadId,
     message: messageId,
+    replyToMessage: replyTo,
     isRead: false,
   });
   return notification.save();
