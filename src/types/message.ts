@@ -19,11 +19,13 @@ export interface MessageSummary extends MessageBase {
 }
 
 export interface Message extends MessageBase {
+  threadId?: string;
   replies: Message[];
 }
 
 export interface MessageEntry {
   channelId: Types.ObjectId;
+  threadId?: Types.ObjectId;
   user: HydratedDocument<UserEntry>;
   content: string;
   replyTo?: Types.ObjectId;

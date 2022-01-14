@@ -16,6 +16,11 @@ const notificationSchema = new Schema<NotificationEntry>(
       required: true,
       ref: 'User',
     },
+    threadId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Message',
+    },
     message: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

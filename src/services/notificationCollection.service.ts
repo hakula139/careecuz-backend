@@ -9,11 +9,13 @@ export const getNotifications = (userId: string | Types.ObjectId): Promise<Hydra
 export const addNotification = (
   fromUserId: string | Types.ObjectId,
   toUserId: string | Types.ObjectId,
+  threadId: string | Types.ObjectId,
   messageId: string | Types.ObjectId,
 ): Promise<HydratedDocument<NotificationEntry>> => {
   const notification = new NotificationModel({
     fromUserId,
     toUserId,
+    threadId,
     message: messageId,
     isRead: false,
   });

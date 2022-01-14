@@ -1,14 +1,17 @@
 import { HydratedDocument, Types } from 'mongoose';
 
-import { MessageBase, MessageEntry } from './message';
+import { MessageEntry } from './message';
 
 export interface Notification {
-  message: MessageBase;
+  fromUserId: string;
+  threadId: string;
+  messageId: string;
 }
 
 export interface NotificationEntry {
   fromUserId: Types.ObjectId;
   toUserId: Types.ObjectId;
-  message: HydratedDocument<MessageEntry>;
+  threadId: Types.ObjectId;
+  message: Types.ObjectId | HydratedDocument<MessageEntry>;
   isRead: boolean;
 }

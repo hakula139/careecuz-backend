@@ -16,21 +16,7 @@ export const getMessages = (
 };
 
 export const getMessage = (id: string | Types.ObjectId): Promise<HydratedDocument<MessageEntry> | null> =>
-  new Promise((resolve) => {
-    MessageModel.findById(id)
-      .populate('user')
-      .populate('replies')
-      .then((message) => {
-        if (message) {
-          // Recursively populate replies.
-          Promise.all((message.replies || []).map((reply) => getMessage(reply.id))).then((replies) => {
-            resolve(Object.assign(message, { replies }));
-          });
-        } else {
-          resolve(null);
-        }
-      });
-  });
+  MessageModel.findById(id).populate('user').populate('replies').exec();
 
 export const updateMessageLastReplyTime = (
   id: string | Types.ObjectId,
@@ -40,19 +26,21 @@ export const updateMessageLastReplyTime = (
 
 export const addMessage = (
   channelId: string | Types.ObjectId,
+  threadId: string | Types.ObjectId | undefined,
   userId: string | Types.ObjectId,
   { content, replyTo }: MessageForm,
 ): Promise<HydratedDocument<MessageEntry>> =>
   new Promise((resolve) => {
     const message = new MessageModel({
       channelId,
+      threadId,
       user: userId,
       content,
       replyTo,
     });
     message.save().then((result) => {
-      if (replyTo) {
-        updateMessageLastReplyTime(replyTo, result.createdAt);
+      if (threadId) {
+        updateMessageLastReplyTime(threadId, result.createdAt);
       }
       updateChannelLastReplyTime(channelId, result.createdAt);
       resolve(result);

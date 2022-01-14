@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 import {
   AddMessageReq,
@@ -12,6 +12,8 @@ import {
   MessageBase,
   MessageEntry,
   MessageSummary,
+  Notification,
+  NotificationEntry,
   PushNewMessage,
   PushNewMessageSummary,
   PushNewNotification,
@@ -66,11 +68,12 @@ const onGetHistoryMessagesReq = (
 
 const parseMessage = (message: HydratedDocument<MessageEntry>): Message => ({
   ...parseMessageBase(message),
-  replies: message.replies.map(parseMessage),
+  threadId: message.threadId?.toString(),
+  replies: (message.replies || []).map(parseMessage),
 });
 
-const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
-  getMessage(messageId)
+const onGetMessageReq = ({ threadId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
+  getMessage(threadId)
     .then((message) => {
       if (!message) {
         callback({
@@ -85,7 +88,7 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
       }
     })
     .catch((error) => {
-      console.log('[ERROR]', '(message:get)', `${messageId}: ${error}`);
+      console.log('[ERROR]', '(message:get)', `${threadId}: ${error}`);
       callback({
         code: 500,
         message: '服务器内部错误',
@@ -93,8 +96,13 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
     });
 };
 
-const pushNewMessage = ({ sockets }: Server, channelId: string, message: HydratedDocument<MessageEntry>): void => {
-  if (message.replyTo) {
+const pushNewMessage = (
+  { sockets }: Server,
+  channelId: string,
+  threadId: string | undefined,
+  message: HydratedDocument<MessageEntry>,
+): void => {
+  if (threadId) {
     sockets.in(channelId).emit('message:new', {
       data: parseMessage(message!),
     } as PushNewMessage);
@@ -105,44 +113,52 @@ const pushNewMessage = ({ sockets }: Server, channelId: string, message: Hydrate
   }
 };
 
-const pushNewNotification = ({ sockets }: Server, replyTo: string, message: HydratedDocument<MessageEntry>): void => {
-  sockets.in(replyTo).emit('notification:new', {
-    data: {
-      message: parseMessageBase(message),
-    },
+const parseNotification = ({ fromUserId, threadId, message }: HydratedDocument<NotificationEntry>): Notification => ({
+  fromUserId: fromUserId.toString(),
+  threadId: threadId.toString(),
+  messageId: (message as Types.ObjectId).toString(),
+});
+
+const pushNewNotification = (
+  { sockets }: Server,
+  toUserId: string,
+  notification: HydratedDocument<NotificationEntry>,
+): void => {
+  sockets.in(toUserId).emit('notification:new', {
+    data: parseNotification(notification),
   } as PushNewNotification);
 };
 
 const onAddMessageReq = (
   io: Server,
   socket: Socket,
-  { channelId, data }: AddMessageReq,
+  { channelId, threadId, data }: AddMessageReq,
   callback: (resp: AddMessageResp) => void,
 ): void => {
-  getUserId(socket.id).then((userId) => {
-    if (userId) {
-      addMessage(channelId, userId, data)
-        .then(({ id, replyTo }) => {
-          console.log('[INFO ]', '(message:add)', `${id}: added`);
+  getUserId(socket.id).then((fromUserId) => {
+    if (fromUserId) {
+      addMessage(channelId, threadId, fromUserId, data)
+        .then((message) => {
+          console.log('[INFO ]', '(message:add)', `${message.id}: added`);
+          console.log('[DEBUG]', '(message:push)', `${message.id}: pushed to ${channelId} / ${threadId}`);
+          pushNewMessage(io, channelId, threadId, message);
 
-          getMessage(id).then((message) => {
-            console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId}`);
-            pushNewMessage(io, channelId, message!);
-
-            if (replyTo) {
-              getMessage(replyTo).then((replyToMessage) => {
-                addNotification(userId, replyTo, message!.id).then((notification) => {
+          if (threadId && message.replyTo) {
+            getMessage(message.replyTo).then((repliedMessage) => {
+              if (repliedMessage) {
+                const { id: toUserId } = repliedMessage.user;
+                addNotification(fromUserId, toUserId, threadId, message.id).then((notification) => {
                   console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
-                  console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${replyTo}`);
-                  pushNewNotification(io, replyToMessage!.user.id, message!);
+                  console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
+                  pushNewNotification(io, toUserId, notification);
                 });
-              });
-            }
-          });
+              }
+            });
+          }
 
           callback({
             code: 200,
-            id,
+            id: message.id,
           });
         })
         .catch((error) => {
