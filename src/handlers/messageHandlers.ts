@@ -104,11 +104,11 @@ const pushNewMessage = (
 ): void => {
   if (threadId) {
     sockets.in(channelId).emit('message:new', {
-      data: parseMessage(message!),
+      data: parseMessage(message),
     } as PushNewMessage);
   } else {
     sockets.in(channelId).emit('message:new:summary', {
-      data: parseMessageSummary(message!),
+      data: parseMessageSummary(message),
     } as PushNewMessageSummary);
   }
 };
@@ -138,27 +138,31 @@ const onAddMessageReq = (
   getUserId(socket.id).then((fromUserId) => {
     if (fromUserId) {
       addMessage(channelId, threadId, fromUserId, data)
-        .then((message) => {
-          console.log('[INFO ]', '(message:add)', `${message.id}: added`);
-          console.log('[DEBUG]', '(message:push)', `${message.id}: pushed to ${channelId} / ${threadId}`);
-          pushNewMessage(io, channelId, threadId, message);
+        .then(({ id, replyTo }) => {
+          console.log('[INFO ]', '(message:add)', `${id}: added`);
 
-          if (threadId && message.replyTo) {
-            getMessage(message.replyTo).then((repliedMessage) => {
-              if (repliedMessage) {
-                const { id: toUserId } = repliedMessage.user;
-                addNotification(fromUserId, toUserId, threadId, message.id).then((notification) => {
-                  console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
-                  console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
-                  pushNewNotification(io, toUserId, notification);
-                });
-              }
-            });
-          }
+          // To populate fields.
+          getMessage(id).then((message) => {
+            console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId} / ${threadId}`);
+            pushNewMessage(io, channelId, threadId, message!);
+
+            if (replyTo && threadId) {
+              getMessage(replyTo).then((repliedMessage) => {
+                if (repliedMessage) {
+                  const { id: toUserId } = repliedMessage.user;
+                  addNotification(fromUserId, toUserId, threadId, id).then((notification) => {
+                    console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
+                    console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
+                    pushNewNotification(io, toUserId, notification);
+                  });
+                }
+              });
+            }
+          });
 
           callback({
             code: 200,
-            id: message.id,
+            id,
           });
         })
         .catch((error) => {
