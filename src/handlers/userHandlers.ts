@@ -32,6 +32,8 @@ const onUserLoginReq = (socket: Socket, { data }: UserAuthReq, callback: (resp: 
         });
       } else if (compareSync(password, user.password)) {
         createSession(socket.id, user.id, callback);
+        console.log('[DEBUG]', '(user:join)', `${socket.id} joins ${user.id}`);
+        socket.join(user.id);
       } else {
         callback({
           code: 403,
@@ -62,6 +64,8 @@ const onUserRegisterReq = (socket: Socket, { data }: UserAuthReq, callback: (res
         addUser(data).then(({ id }) => {
           console.log('[INFO ]', '(user:register)', `${email}: registered`);
           createSession(socket.id, id, callback);
+          console.log('[DEBUG]', '(user:join)', `${socket.id} joins ${id}`);
+          socket.join(id);
         });
       }
     })
@@ -82,6 +86,8 @@ const onPushUserInfo = (socket: Socket, { userId, token }: PushUserInfo, callbac
           console.log('[DEBUG]', '(user:info)', `user id saved: (${socket.id}, ${userId})`);
           callback({ code: 200 });
         });
+        console.log('[DEBUG]', '(user:join)', `${socket.id} joins ${userId}`);
+        socket.join(userId);
       } else {
         callback({
           code: 403,

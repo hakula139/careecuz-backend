@@ -8,40 +8,15 @@ import {
   GetHistoryMessagesResp,
   GetMessageReq,
   GetMessageResp,
-  Message,
   MessageEntry,
-  MessageSummary,
   PushNewMessage,
   PushNewMessageSummary,
-  User,
-  UserEntry,
 } from '@/types';
+import { parseMessage, parseMessageSummary } from '@/parsers';
 import { addMessage, getMessage, getMessages } from '@/services/messageCollection.service';
+import { addNotification } from '@/services/notificationCollection.service';
 import { getUserId } from '@/services/userRedis.service';
-
-const parseUser = ({ id, isBlocked, isRemoved }: HydratedDocument<UserEntry>): User => ({
-  id,
-  isBlocked,
-  isRemoved,
-});
-
-const parseMessageSummary = ({
-  id,
-  user,
-  content,
-  replyTo,
-  replyCount,
-  createdAt,
-  updatedAt,
-}: HydratedDocument<MessageEntry>): MessageSummary => ({
-  id,
-  user: parseUser(user),
-  content,
-  replyTo: replyTo?.toString(),
-  replyCount,
-  time: createdAt.toISOString(),
-  lastReplyTime: updatedAt.toISOString(),
-});
+import { pushNewNotification } from './notificationHandlers';
 
 const onGetHistoryMessagesReq = (
   { channelId, lastMessageId, maxMessageCount }: GetHistoryMessagesReq,
@@ -63,19 +38,8 @@ const onGetHistoryMessagesReq = (
     });
 };
 
-const parseMessage = ({
-  id, user, content, replyTo, replies, createdAt,
-}: HydratedDocument<MessageEntry>): Message => ({
-  id,
-  user: parseUser(user),
-  content,
-  replyTo: replyTo?.toString(),
-  replies: replies.map(parseMessage),
-  time: createdAt.toISOString(),
-});
-
-const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
-  getMessage(messageId)
+const onGetMessageReq = ({ threadId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
+  getMessage(threadId)
     .then((message) => {
       if (!message) {
         callback({
@@ -90,7 +54,7 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
       }
     })
     .catch((error) => {
-      console.log('[ERROR]', '(message:get)', `${messageId}: ${error}`);
+      console.log('[ERROR]', '(message:get)', `${threadId}: ${error}`);
       callback({
         code: 500,
         message: '服务器内部错误',
@@ -98,33 +62,57 @@ const onGetMessageReq = ({ messageId }: GetMessageReq, callback: (resp: GetMessa
     });
 };
 
-const onAddMessageReq = (
+const pushNewMessage = (
   { sockets }: Server,
+  channelId: string,
+  threadId: string | undefined,
+  message: HydratedDocument<MessageEntry>,
+): void => {
+  if (threadId) {
+    sockets.in(channelId).emit('message:new', {
+      data: parseMessage(message),
+    } as PushNewMessage);
+  } else {
+    sockets.in(channelId).emit('message:new:summary', {
+      data: parseMessageSummary(message),
+    } as PushNewMessageSummary);
+  }
+};
+
+const onAddMessageReq = (
+  io: Server,
   socket: Socket,
-  { channelId, data }: AddMessageReq,
+  { channelId, threadId, data }: AddMessageReq,
   callback: (resp: AddMessageResp) => void,
 ): void => {
-  getUserId(socket.id).then((userId) => {
-    if (userId) {
-      addMessage(channelId, userId, data)
-        .then(({ id }) => {
+  getUserId(socket.id).then((fromUserId) => {
+    if (fromUserId) {
+      addMessage(channelId, threadId, fromUserId, data)
+        .then(({ id, replyTo }) => {
           console.log('[INFO ]', '(message:add)', `${id}: added`);
+
+          // To populate fields.
+          getMessage(id).then((message) => {
+            console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId} / ${threadId}`);
+            pushNewMessage(io, channelId, threadId, message!);
+
+            if (replyTo && threadId) {
+              getMessage(replyTo).then((repliedMessage) => {
+                if (repliedMessage) {
+                  const { id: toUserId } = repliedMessage.user;
+                  addNotification(fromUserId, toUserId, channelId, threadId, id, replyTo).then((notification) => {
+                    console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
+                    console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
+                    pushNewNotification(io, toUserId, notification);
+                  });
+                }
+              });
+            }
+          });
+
           callback({
             code: 200,
             id,
-          });
-
-          getMessage(id).then((message) => {
-            console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId}`);
-            if (message!.replyTo) {
-              sockets.in(channelId).emit('message:new', {
-                data: parseMessage(message!),
-              } as PushNewMessage);
-            } else {
-              sockets.in(channelId).emit('message:new:summary', {
-                data: parseMessageSummary(message!),
-              } as PushNewMessageSummary);
-            }
           });
         })
         .catch((error) => {
