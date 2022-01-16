@@ -1,3 +1,4 @@
+import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
 import { LISTEN_PORT } from './configs';
@@ -7,14 +8,10 @@ import {
 import { dbManager } from './services/database.service';
 import { redisManager } from './services/redis.service';
 
-const io = new Server(LISTEN_PORT, {
-  cors: {
-    origin: '*',
-    credentials: true,
-  },
+const server = createServer();
+const io = new Server(server, {
+  cors: { origin: '*' },
 });
-
-console.log('[INFO ]', '(server)', 'server started, listening on port', LISTEN_PORT);
 
 await dbManager.connect();
 await redisManager.connect();
@@ -25,4 +22,8 @@ io.on('connection', (socket: Socket) => {
   messageHandlers(io, socket);
   notificationHandlers(io, socket);
   userHandlers(io, socket);
+});
+
+server.listen(LISTEN_PORT, () => {
+  console.log('[INFO ]', '(server)', 'server started, listening on port', LISTEN_PORT);
 });
