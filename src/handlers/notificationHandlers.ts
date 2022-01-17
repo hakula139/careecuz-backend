@@ -7,29 +7,29 @@ import { getNotifications } from '@/services/notificationCollection.service';
 import { getUserId } from '@/services/userRedis.service';
 
 const onGetNotificationsReq = (socket: Socket, callback: (resp: GetNotificationsResp) => void): void => {
-  getUserId(socket.id).then((toUserId) => {
-    if (toUserId) {
-      getNotifications(toUserId)
-        .then((notifications) => {
+  try {
+    getUserId(socket.id).then((toUserId) => {
+      if (toUserId) {
+        getNotifications(toUserId).then((notifications) => {
           callback({
             code: 200,
             data: notifications.map(parseNotification),
           });
-        })
-        .catch((error) => {
-          console.log('[ERROR]', '(notifications:get)', error);
-          callback({
-            code: 500,
-            message: '服务器内部错误',
-          });
         });
-    } else {
-      callback({
-        code: 403,
-        message: '会话已过期',
-      });
-    }
-  });
+      } else {
+        callback({
+          code: 403,
+          message: '会话已过期',
+        });
+      }
+    });
+  } catch (error) {
+    console.log('[ERROR]', '(notifications:get)', error);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 export const pushNewNotification = (

@@ -6,6 +6,7 @@ declare global {
       DB_CONN_STRING: string;
       DB_NAME: string;
       REDIS_CONN_STRING: string;
+      SENDGRID_API_KEY: string;
     }
   }
 }

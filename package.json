@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc --project ./tsconfig.json",
+    "build": "yarn prepare && tsc --project ./tsconfig.json",
     "start": "yarn build && node --experimental-specifier-resolution=node -r dotenv/config dist/server.js",
     "prepare": "husky install && chmod +x .husky/* && ts-patch install -s"
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.6.0",
     "bcrypt": "^5.0.1",
     "dotenv": "^10.0.0",
+    "isemail": "^3.2.0",
     "mongoose": "^6.1.5",
     "mongoose-unique-validator": "^3.0.0",
     "redis": "^4.0.1",

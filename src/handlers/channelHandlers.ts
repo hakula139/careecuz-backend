@@ -13,25 +13,25 @@ import { parseChannelInfo, parseChannelSummary } from '@/parsers';
 import { addChannel, getChannel, getChannels } from '@/services/channelCollection.service';
 
 const onGetChannelsReq = (callback: (resp: GetChannelsResp) => void): void => {
-  getChannels()
-    .then((channels) => {
+  try {
+    getChannels().then((channels) => {
       callback({
         code: 200,
         data: channels.map(parseChannelSummary),
       });
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(channels:get)', error);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(channels:get)', error);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onGetChannelReq = ({ id }: GetChannelReq, callback: (resp: GetChannelResp) => void): void => {
-  getChannel(id)
-    .then((channel) => {
+  try {
+    getChannel(id).then((channel) => {
       if (!channel) {
         callback({
           code: 404,
@@ -43,32 +43,32 @@ const onGetChannelReq = ({ id }: GetChannelReq, callback: (resp: GetChannelResp)
           data: parseChannelInfo(channel),
         });
       }
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(channel:get)', `${id}: ${error}`);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(channel:get)', `${id}: ${error}`);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onAddChannelReq = ({ data }: AddChannelReq, callback: (resp: AddChannelResp) => void): void => {
-  addChannel(data)
-    .then(({ id }) => {
+  try {
+    addChannel(data).then(({ id }) => {
       console.log('[INFO ]', '(channel:add)', `${id} (${data.name}): added`);
       callback({
         code: 200,
         id,
       });
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(channel:add)', error);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(channel:add)', error);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onJoinChannel = (socket: Socket, { id }: JoinChannel): void => {
