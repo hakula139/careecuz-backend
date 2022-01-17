@@ -97,6 +97,7 @@ const onUserRegisterReq = (socket: Socket, { data }: UserAuthReq, callback: (res
       } else {
         getVerifyCode(email).then((currentVerifyCode) => {
           if (verifyCode !== currentVerifyCode) {
+            console.log('[DEBUG]', '(user:verify-code:send)', `current verify code: (${email}, ${currentVerifyCode})`);
             callback({
               code: 403,
               message: '验证码错误',
