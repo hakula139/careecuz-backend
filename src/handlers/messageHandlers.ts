@@ -22,25 +22,25 @@ const onGetHistoryMessagesReq = (
   { channelId, lastMessageId, maxMessageCount }: GetHistoryMessagesReq,
   callback: (resp: GetHistoryMessagesResp) => void,
 ): void => {
-  getMessages(channelId, lastMessageId, maxMessageCount)
-    .then((messages) => {
+  try {
+    getMessages(channelId, lastMessageId, maxMessageCount).then((messages) => {
       callback({
         code: 200,
         data: messages.map(parseMessageSummary),
       });
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(messages:get)', error);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(messages:get)', error);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onGetMessageReq = ({ threadId }: GetMessageReq, callback: (resp: GetMessageResp) => void): void => {
-  getMessage(threadId)
-    .then((message) => {
+  try {
+    getMessage(threadId).then((message) => {
       if (!message) {
         callback({
           code: 404,
@@ -52,14 +52,14 @@ const onGetMessageReq = ({ threadId }: GetMessageReq, callback: (resp: GetMessag
           data: parseMessage(message),
         });
       }
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(message:get)', `${threadId}: ${error}`);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(message:get)', `${threadId}: ${error}`);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const pushNewMessage = (
@@ -85,50 +85,51 @@ const onAddMessageReq = (
   { channelId, threadId, data }: AddMessageReq,
   callback: (resp: AddMessageResp) => void,
 ): void => {
-  getUserId(socket.id).then((fromUserId) => {
-    if (fromUserId) {
-      addMessage(channelId, threadId, fromUserId, data)
-        .then(({ id, replyTo }) => {
-          console.log('[INFO ]', '(message:add)', `${id}: added`);
-
-          // To populate fields.
-          getMessage(id).then((message) => {
-            console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId} / ${threadId}`);
-            pushNewMessage(io, channelId, threadId, message!);
-
-            if (replyTo && threadId) {
-              getMessage(replyTo).then((repliedMessage) => {
-                if (repliedMessage) {
-                  const { id: toUserId } = repliedMessage.user;
-                  addNotification(fromUserId, toUserId, channelId, threadId, id, replyTo).then((notification) => {
-                    console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
-                    console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
-                    pushNewNotification(io, toUserId, notification);
-                  });
-                }
-              });
-            }
-          });
-
-          callback({
-            code: 200,
-            id,
-          });
-        })
-        .catch((error) => {
-          console.log('[ERROR]', '(message:add)', error);
-          callback({
-            code: 500,
-            message: '服务器内部错误',
-          });
+  try {
+    getUserId(socket.id).then((fromUserId) => {
+      if (!fromUserId) {
+        callback({
+          code: 403,
+          message: '会话已过期',
         });
-    } else {
-      callback({
-        code: 403,
-        message: '会话已过期',
+        return;
+      }
+
+      addMessage(channelId, threadId, fromUserId, data).then(({ id, replyTo }) => {
+        console.log('[INFO ]', '(message:add)', `${id}: added`);
+
+        // To populate fields.
+        getMessage(id).then((message) => {
+          console.log('[DEBUG]', '(message:push)', `${id}: pushed to ${channelId} / ${threadId}`);
+          pushNewMessage(io, channelId, threadId, message!);
+
+          if (replyTo && threadId) {
+            getMessage(replyTo).then((repliedMessage) => {
+              if (repliedMessage) {
+                const { id: toUserId } = repliedMessage.user;
+                addNotification(fromUserId, toUserId, channelId, threadId, id, replyTo).then((notification) => {
+                  console.log('[INFO ]', '(notification:add)', `${notification.id}: added`);
+                  console.log('[DEBUG]', '(notification:push)', `${notification.id}: pushed to ${toUserId}`);
+                  pushNewNotification(io, toUserId, notification);
+                });
+              }
+            });
+          }
+        });
+
+        callback({
+          code: 200,
+          id,
+        });
       });
-    }
-  });
+    });
+  } catch (error) {
+    console.log('[ERROR]', '(message:add)', error);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const messageHandlers = (io: Server, socket: Socket) => {

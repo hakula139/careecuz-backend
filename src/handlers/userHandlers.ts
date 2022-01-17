@@ -48,8 +48,8 @@ const onUserLoginReq = (socket: Socket, { data }: UserAuthReq, callback: (resp: 
     return;
   }
 
-  getUserByEmail(email)
-    .then((user) => {
+  try {
+    getUserByEmail(email).then((user) => {
       if (!user) {
         callback({
           code: 100,
@@ -65,14 +65,14 @@ const onUserLoginReq = (socket: Socket, { data }: UserAuthReq, callback: (resp: 
           message: '密码错误',
         });
       }
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(user:login)', `${email}: ${error}`);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(user:login)', `${email}: ${error}`);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onUserRegisterReq = (socket: Socket, { data }: UserAuthReq, callback: (resp: UserAuthResp) => void): void => {
@@ -86,8 +86,8 @@ const onUserRegisterReq = (socket: Socket, { data }: UserAuthReq, callback: (res
     return;
   }
 
-  getUserByEmail(email)
-    .then((user) => {
+  try {
+    getUserByEmail(email).then((user) => {
       if (user) {
         // User should not exist.
         callback({
@@ -111,21 +111,21 @@ const onUserRegisterReq = (socket: Socket, { data }: UserAuthReq, callback: (res
           }
         });
       }
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(user:register)', `${email}: ${error}`);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(user:register)', `${email}: ${error}`);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onSendVerifyCodeReq = (socket: Socket, { email }: SendVerifyCodeReq, callback: (resp: Resp) => void): void => {
   const ip = (socket.handshake.headers['x-real-ip'] as string) || socket.handshake.address;
 
-  getVerifyCodeByIp(ip)
-    .then((currentVerifyCode) => {
+  try {
+    getVerifyCodeByIp(ip).then((currentVerifyCode) => {
       if (currentVerifyCode) {
         console.log('[DEBUG]', '(user:verify-code:send)', `current verify code: (${ip}, ${currentVerifyCode})`);
         callback({
@@ -143,19 +143,19 @@ const onSendVerifyCodeReq = (socket: Socket, { email }: SendVerifyCodeReq, callb
           callback({ code: 200 });
         });
       });
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(user:verify-code:send)', `${email}: ${error}`);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(user:verify-code:send)', `${email}: ${error}`);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const onPushUserInfo = (socket: Socket, { userId, token }: PushUserInfo, callback: (resp: Resp) => void): void => {
-  getUserToken(userId)
-    .then((savedToken) => {
+  try {
+    getUserToken(userId).then((savedToken) => {
       if (token === savedToken) {
         setUserId(socket.id, userId).then(() => {
           console.log('[DEBUG]', '(user:info)', `user id saved: (${socket.id}, ${userId})`);
@@ -169,14 +169,14 @@ const onPushUserInfo = (socket: Socket, { userId, token }: PushUserInfo, callbac
           message: '会话已过期',
         });
       }
-    })
-    .catch((error) => {
-      console.log('[ERROR]', '(user:info)', `${userId}: ${error}`);
-      callback({
-        code: 500,
-        message: '服务器内部错误',
-      });
     });
+  } catch (error) {
+    console.log('[ERROR]', '(user:info)', `${userId}: ${error}`);
+    callback({
+      code: 500,
+      message: '服务器内部错误',
+    });
+  }
 };
 
 const userHandlers = (_io: Server, socket: Socket) => {
