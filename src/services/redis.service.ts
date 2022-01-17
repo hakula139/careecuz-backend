@@ -8,7 +8,7 @@ export default class RedisManager {
   });
 
   public async connect(): Promise<void> {
-    this.db.connect();
+    await this.db.connect();
 
     this.db.on('connect', () => console.log('[INFO ]', '(redis)', 'connected to redis'));
     this.db.on('ready', () => console.log('[DEBUG]', '(redis)', 'connection ready'));

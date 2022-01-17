@@ -21,3 +21,21 @@ export const setUserId = (
 ): Promise<string | null> => db.set(`${REDIS_KEY_PREFIX}socket:${socketId}`, userId, { EX: expire });
 
 export const delUserId = (socketId: string): Promise<number> => db.del(`${REDIS_KEY_PREFIX}socket:${socketId}`);
+
+export const getVerifyCode = (email: string): Promise<string | null> =>
+  db.get(`${REDIS_KEY_PREFIX}email:verify-code:${email}`);
+
+export const setVerifyCode = (
+  email: string,
+  verifyCode: string,
+  expire: number = 60 * 60, // will expire in an hour by default
+): Promise<string | null> => db.set(`${REDIS_KEY_PREFIX}email:verify-code:${email}`, verifyCode, { EX: expire });
+
+export const getVerifyCodeByIp = (ip: string): Promise<string | null> =>
+  db.get(`${REDIS_KEY_PREFIX}ip:verify-code:${ip}`);
+
+export const setVerifyCodeByIp = (
+  ip: string,
+  verifyCode: string,
+  expire: number = 60, // will expire in a minute by default
+): Promise<string | null> => db.set(`${REDIS_KEY_PREFIX}ip:verify-code:${ip}`, verifyCode, { EX: expire });
